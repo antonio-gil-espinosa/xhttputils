@@ -1,12 +1,18 @@
 ﻿Version=5.5
-NumberOfModules=1
-Module1=Starter
+NumberOfModules=5
+Module1=Callback
+Module2=XHttpClient
+Module3=XHttpJob
+Module4=XHttpRequest
+Module5=XHttpResponse
 Build1=Default,b4a.xhttputils
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="5" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~SetApplicationAttribute(android:theme, "@android:style/Theme.Holo")~\n~'End of default text.~\n~
 IconFile=
 NumberOfFiles=0
-NumberOfLibraries=1
+NumberOfLibraries=3
 Library1=core
+Library2=http
+Library3=json
 @EndOfDesignText@
 #Region  Project Attributes 
 	#ApplicationLabel: B4A Example
