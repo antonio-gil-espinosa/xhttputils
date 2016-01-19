@@ -11,8 +11,8 @@ IconFile=
 NumberOfFiles=0
 NumberOfLibraries=3
 Library1=core
-Library2=http
-Library3=json
+Library2=json
+Library3=okhttp
 @EndOfDesignText@
 #Region  Project Attributes 
 	#ApplicationLabel: B4A Example

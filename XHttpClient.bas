@@ -8,7 +8,7 @@ Sub Class_Globals
 	Public BaseUrl As String
 	Private jobs As Map
 	Private jobCounter As Int
-	Private client As HttpClient
+	Private client As OkHttpClient
 	Public UserAgent As String = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36"
 
 End Sub
@@ -41,12 +41,12 @@ Public Sub Execute(request As XHttpRequest) As XHttpJob
 	
 	jobCounter = jobCounter + 1
 	
-	Dim httpRequest As HttpRequest
+	Dim httpRequest As OkHttpRequest
 	Dim url As String = BaseUrl & request.Url
 	If request.Parameters <> Null And request.Parameters.Size > 0 Then
 		url = url & "?" & Map2String(request.Parameters,"&")
 	End If
-	
+
 	
 	Dim method As String = request.Method.ToUpperCase()
 	
@@ -65,7 +65,7 @@ Public Sub Execute(request As XHttpRequest) As XHttpJob
 	Else If method ="DELETE" Then
 		httpRequest.InitializeDelete(url)
 	Else
-			
+	
 	End If
 	
 	If request.Cookies <> Null And request.Cookies.Size > 0 Then
@@ -90,7 +90,7 @@ Public Sub Execute(request As XHttpRequest) As XHttpJob
 	Return job
 End Sub
 
-Sub xhttpclient_ResponseSuccess (response As HttpResponse, taskId As Int)
+Sub xhttpclient_ResponseSuccess (response As OkHttpResponse, taskId As Int)
 		Dim job As XHttpJob = jobs.Get(taskId)
 		Dim xResponse As XHttpResponse
 		xResponse.Initialize()
@@ -143,7 +143,7 @@ Private Sub Response_StreamFinish (Success As Boolean, TaskId As Int)
 End Sub
 
 
- Sub xhttpclient_ResponseError (response As HttpResponse, reason As String, statusCode As Int, taskId As Int)
+ Sub xhttpclient_ResponseError (response As OkHttpResponse, reason As String, statusCode As Int, taskId As Int)
  	Dim job As XHttpJob = jobs.Get(taskId)
 	For Each callback As Callback In job.ErrorCallbacks
 			callback.InvokeSubDelayed2(job.Response)
