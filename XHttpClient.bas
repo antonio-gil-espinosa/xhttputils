@@ -8,7 +8,7 @@ Sub Class_Globals
 	Public BaseUrl As String
 	Private jobs As Map
 	Private jobCounter As Int
-	Private client As OkHttpClient
+
 	Public UserAgent As String = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36"
 
 End Sub
@@ -19,7 +19,7 @@ End Sub
 'Initializes the object. You can add parameters to this method if needed.
 Public Sub Initialize(pBaseUrl As String)
 	BaseUrl = pBaseUrl
-	client.Initialize("xhttpclient")
+	
 	jobs.Initialize()
 
 End Sub
@@ -69,7 +69,8 @@ Public Sub Execute(request As XHttpRequest) As XHttpJob
 	End If
 	
 	If request.Cookies <> Null And request.Cookies.Size > 0 Then
-		httpRequest.SetHeader("Cookie",Map2String(request.Cookies,"; "))
+		Dim authCookie As String = Map2String(request.Cookies,"; ")
+		httpRequest.SetHeader("Cookie",authCookie)
 	End If
 	
 	
@@ -85,8 +86,10 @@ Public Sub Execute(request As XHttpRequest) As XHttpJob
 	
 	jobs.Put(jobCounter,job)
 	
-	
+	Dim client As OkHttpClient
+	client.Initialize("xhttpclient")
 	client.Execute(httpRequest,jobCounter)
+	
 	Return job
 End Sub
 
@@ -133,7 +136,7 @@ Private Sub Response_StreamFinish (Success As Boolean, TaskId As Int)
 				End If
 			Next
 		Else
-			For Each callback As Callback In job.ErrorCallbacks
+			For Each callback As Callback In job.GetErrorCallbacks
 					CallSubDelayed2(callback.GetModule,callback.GetRoutine,job.Response)
 			Next
 		End If
