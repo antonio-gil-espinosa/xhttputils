@@ -7,8 +7,8 @@ B4A=true
 Sub Class_Globals
 	Public Request As XHttpRequest
 	Public Response As XHttpResponse
-	Public SuccessCallbacks As List
-	Public ErrorCallbacks As List
+	Private SuccessCallbacks As List
+	Private ErrorCallbacks As List
 End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
@@ -30,3 +30,13 @@ Public Sub OnError(module As Object,routine As String) As XHttpJob
 	ErrorCallbacks.Add(cb)
 	Return Me
 End Sub
+
+Public Sub GetSuccessCallbacks() As List
+	Return SuccessCallbacks
+End Sub
+
+Public Sub GetErrorCallbacks() As List
+	Return ErrorCallbacks
+End Sub
+
+

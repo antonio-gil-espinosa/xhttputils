@@ -107,7 +107,7 @@ Private Sub Response_StreamFinish (Success As Boolean, TaskId As Int)
 	Try
 		Dim job As XHttpJob = jobs.Get(TaskId)
 		If Success Then
-			For Each callback As Callback In job.SuccessCallbacks
+			For Each callback As Callback In job.GetSuccessCallbacks()
 				Dim contentType As String = job.Response.ContentType
 				If contentType.Contains("application/json") Then
 					
@@ -115,22 +115,26 @@ Private Sub Response_StreamFinish (Success As Boolean, TaskId As Int)
 					Dim str As String = BytesToString(buffer,0,buffer.Length,"UTF8")
 					Dim jsonParser As JSONParser
 					jsonParser.Initialize(str)
+					
+					
 					If str.StartsWith("{") Then
-						callback.InvokeSubDelayed2(jsonParser.NextObject())
-			
+						Dim map As Map = jsonParser.NextObject()
+						CallSubDelayed2(callback.GetModule(),callback.GetRoutine(),map)
 					else if str.StartsWith("[") Then
-						callback.InvokeSubDelayed2(jsonParser.NextArray())
+						Dim list As List = jsonParser.NextArray()
+						CallSubDelayed2(callback.GetModule,callback.GetRoutine,list)
 					Else 
-						callback.InvokeSubDelayed2(jsonParser.NextValue())
+						Dim obj As Object = jsonParser.NextValue()
+						CallSubDelayed2(callback.GetModule,callback.GetRoutine,obj)
 					End If
 					
 				Else
-					callback.InvokeSubDelayed2(job.Response)
+					CallSubDelayed2(callback.GetModule,callback.GetRoutine,job.Response)
 				End If
 			Next
 		Else
 			For Each callback As Callback In job.ErrorCallbacks
-				callback.InvokeSubDelayed2(job.Response)
+					CallSubDelayed2(callback.GetModule,callback.GetRoutine,job.Response)
 			Next
 		End If
 	Catch
@@ -145,8 +149,8 @@ End Sub
 
  Sub xhttpclient_ResponseError (response As OkHttpResponse, reason As String, statusCode As Int, taskId As Int)
  	Dim job As XHttpJob = jobs.Get(taskId)
-	For Each callback As Callback In job.ErrorCallbacks
-			callback.InvokeSubDelayed2(job.Response)
+	For Each callback As Callback In job.GetErrorCallbacks()
+				CallSubDelayed2(callback.GetModule,callback.GetRoutine,job.Response)
 		Next
 	jobs.Remove(taskId)
 End Sub

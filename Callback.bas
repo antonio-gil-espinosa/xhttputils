@@ -15,29 +15,12 @@ Public Sub Initialize(pModule As Object,pRoutine As String)
 	Routine = pRoutine
  
 End Sub
-
-public Sub InvokeSub()As Object
-	Return CallSub(Module,Routine)
+public Sub GetModule()As Object
+	Return Module
 End Sub
 
-public Sub InvokeSub2(arg1 As Object)As Object
-	Return CallSub2(Module,Routine,arg1)
-End Sub
-
-public Sub InvokeSub3(arg1 As Object,arg2 As Object) As Object
-	Return CallSub3(Module,Routine,arg1,arg2)
-End Sub
-
-public Sub InvokeSubDelayed()
-	CallSubDelayed(Module,Routine)
-End Sub
-
-public Sub InvokeSubDelayed2(arg1 As Object)
-	CallSubDelayed2(Module,Routine,arg1)
-End Sub
-
-public Sub InvokeSubDelayed3(arg1 As Object,arg2 As Object)
-	CallSubDelayed3(Module,Routine,arg1,arg2)
+public Sub GetRoutine()As String
+	Return Routine
 End Sub
 
 
