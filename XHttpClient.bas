@@ -19,9 +19,8 @@ End Sub
 'Initializes the object. You can add parameters to this method if needed.
 Public Sub Initialize(pBaseUrl As String)
 	BaseUrl = pBaseUrl
-	
-	jobs.Initialize()
 
+	jobs.Initialize()
 End Sub
 
 Private Sub Map2String(map As Map,separator As String) As String
@@ -36,12 +35,17 @@ Private Sub Map2String(map As Map,separator As String) As String
 	Return ret
 End Sub
 
+
 Public Sub Execute(request As XHttpRequest) As XHttpJob
 	
-	
+				Dim boundary As String = "---------------------------411C467633A"
 	jobCounter = jobCounter + 1
 	
 	Dim httpRequest As OkHttpRequest
+	
+
+	
+	
 	Dim url As String = BaseUrl & request.Url
 	If request.Parameters <> Null And request.Parameters.Size > 0 Then
 		url = url & "?" & Map2String(request.Parameters,"&")
@@ -49,19 +53,22 @@ Public Sub Execute(request As XHttpRequest) As XHttpJob
 
 	
 	Dim method As String = request.Method.ToUpperCase()
-	
+
 	If method = "GET" Then
 		httpRequest.InitializeGet(url)
 	Else If method = "POST" Then
-		Dim inputStream As InputStream
-		Dim bytes() As Byte = Map2String(request.Data,"&").GetBytes("UTF8")
-		inputStream.InitializeFromBytesArray(bytes,0,bytes.Length)
-		httpRequest.InitializePost(url,inputStream,bytes.Length)
+		
+
+		Dim xStream As XInputStream = request.GetXInputStream(boundary)
+		httpRequest.InitializePost(url,xStream.GetInputStream(),xStream.GetSize)
+		httpRequest.SetContentType("multipart/form-data; boundary=" & boundary)
+
 	Else If method ="PUT" Then
-		Dim inputStream As InputStream
-		Dim bytes() As Byte = Map2String(request.Data,"&").GetBytes("UTF8")
-		inputStream.InitializeFromBytesArray(bytes,0,bytes.Length)
-		httpRequest.InitializePut(url,inputStream,bytes.Length)
+
+		Dim xStream As XInputStream = request.GetXInputStream(boundary)
+		httpRequest.InitializePut(url,xStream.GetInputStream(),xStream.GetSize)
+			httpRequest.SetContentType("multipart/form-data; boundary=" & boundary)
+
 	Else If method ="DELETE" Then
 		httpRequest.InitializeDelete(url)
 	Else
@@ -106,38 +113,40 @@ Sub xhttpclient_ResponseSuccess (response As OkHttpResponse, taskId As Int)
 		response.GetAsynchronously("response", xResponse.OutputStream, True, taskId)
 End Sub
 
+Private Sub ProccessContent(contentType As String,response As XHttpResponse,cb As Callback)
+	If contentType.Contains("application/json") Then
+		
+		Dim buffer() As Byte = response.OutputStream.ToBytesArray()
+		Dim str As String = BytesToString(buffer,0,buffer.Length,"UTF8")
+		Dim jsonParser As JSONParser
+		jsonParser.Initialize(str)
+
+		If str.StartsWith("{") Then
+			Dim map As Map = jsonParser.NextObject()
+			CallSubDelayed2(cb.GetModule(),cb.GetRoutine(),map)
+		else if str.StartsWith("[") Then
+			Dim list As List = jsonParser.NextArray()
+			CallSubDelayed2(cb.GetModule,cb.GetRoutine,list)
+		Else 
+			Dim obj As Object = jsonParser.NextValue()
+			CallSubDelayed2(cb.GetModule,cb.GetRoutine,obj)
+		End If
+			
+	Else
+		CallSubDelayed2(cb.GetModule,cb.GetRoutine,response)
+	End If
+End Sub
+
 Private Sub Response_StreamFinish (Success As Boolean, TaskId As Int)
 	Try
 		Dim job As XHttpJob = jobs.Get(TaskId)
 		If Success Then
 			For Each callback As Callback In job.GetSuccessCallbacks()
-				Dim contentType As String = job.Response.ContentType
-				If contentType.Contains("application/json") Then
-					
-					Dim buffer() As Byte = job.Response.OutputStream.ToBytesArray()
-					Dim str As String = BytesToString(buffer,0,buffer.Length,"UTF8")
-					Dim jsonParser As JSONParser
-					jsonParser.Initialize(str)
-					
-					
-					If str.StartsWith("{") Then
-						Dim map As Map = jsonParser.NextObject()
-						CallSubDelayed2(callback.GetModule(),callback.GetRoutine(),map)
-					else if str.StartsWith("[") Then
-						Dim list As List = jsonParser.NextArray()
-						CallSubDelayed2(callback.GetModule,callback.GetRoutine,list)
-					Else 
-						Dim obj As Object = jsonParser.NextValue()
-						CallSubDelayed2(callback.GetModule,callback.GetRoutine,obj)
-					End If
-					
-				Else
-					CallSubDelayed2(callback.GetModule,callback.GetRoutine,job.Response)
-				End If
+				ProccessContent(job.Response.ContentType,job.Response,callback)
 			Next
 		Else
 			For Each callback As Callback In job.GetErrorCallbacks
-					CallSubDelayed2(callback.GetModule,callback.GetRoutine,job.Response)
+				ProccessContent(job.Response.ContentType,job.Response,callback)
 			Next
 		End If
 	Catch
