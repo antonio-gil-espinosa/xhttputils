@@ -6,8 +6,7 @@ B4A=true
 'Class module
 Sub Class_Globals
 	Public BaseUrl As String
-	Private jobs As Map
-	Private jobCounter As Int
+
 
 	Public UserAgent As String = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36"
 
@@ -20,7 +19,6 @@ End Sub
 Public Sub Initialize(pBaseUrl As String)
 	BaseUrl = pBaseUrl
 
-	jobs.Initialize()
 End Sub
 
 Private Sub Map2String(map As Map,separator As String) As String
@@ -39,7 +37,7 @@ End Sub
 Public Sub Execute(request As XHttpRequest) As XHttpJob
 	
 				Dim boundary As String = "---------------------------411C467633A"
-	jobCounter = jobCounter + 1
+
 	
 	Dim httpRequest As OkHttpRequest
 	
@@ -91,78 +89,7 @@ Public Sub Execute(request As XHttpRequest) As XHttpJob
 	job.Initialize()
 	job.Request = request
 	
-	jobs.Put(jobCounter,job)
-	
-	Dim client As OkHttpClient
-	client.Initialize("xhttpclient")
-	client.Execute(httpRequest,jobCounter)
-	
+	CallSubDelayed3(XHttpService, "Execute", httpRequest,job)	
 	Return job
-End Sub
 
-Sub xhttpclient_ResponseSuccess (response As OkHttpResponse, taskId As Int)
-		Dim job As XHttpJob = jobs.Get(taskId)
-		Dim xResponse As XHttpResponse
-		xResponse.Initialize()
-		xResponse.ContentType = response.ContentType
-		xResponse.ContentLength = response.ContentLength
-		xResponse.StatusCode = response.StatusCode
-		
-		job.Response = xResponse
-		job.Response.OutputStream.InitializeToBytesArray(0)
-		response.GetAsynchronously("response", xResponse.OutputStream, True, taskId)
-End Sub
-
-Private Sub ProccessContent(contentType As String,response As XHttpResponse,cb As Callback)
-	If contentType.Contains("application/json") Then
-		
-		Dim buffer() As Byte = response.OutputStream.ToBytesArray()
-		Dim str As String = BytesToString(buffer,0,buffer.Length,"UTF8")
-		Dim jsonParser As JSONParser
-		jsonParser.Initialize(str)
-
-		If str.StartsWith("{") Then
-			Dim map As Map = jsonParser.NextObject()
-			CallSubDelayed2(cb.GetModule(),cb.GetRoutine(),map)
-		else if str.StartsWith("[") Then
-			Dim list As List = jsonParser.NextArray()
-			CallSubDelayed2(cb.GetModule,cb.GetRoutine,list)
-		Else 
-			Dim obj As Object = jsonParser.NextValue()
-			CallSubDelayed2(cb.GetModule,cb.GetRoutine,obj)
-		End If
-			
-	Else
-		CallSubDelayed2(cb.GetModule,cb.GetRoutine,response)
-	End If
-End Sub
-
-Private Sub Response_StreamFinish (Success As Boolean, TaskId As Int)
-	Try
-		Dim job As XHttpJob = jobs.Get(TaskId)
-		If Success Then
-			For Each callback As Callback In job.GetSuccessCallbacks()
-				ProccessContent(job.Response.ContentType,job.Response,callback)
-			Next
-		Else
-			For Each callback As Callback In job.GetErrorCallbacks
-				ProccessContent(job.Response.ContentType,job.Response,callback)
-			Next
-		End If
-	Catch
-		Log(LastException.Message)
-	End Try
-	
-	If jobs.ContainsKey(TaskId) Then
-		 jobs.Remove(TaskId) 
-	End If
-End Sub
-
-
- Sub xhttpclient_ResponseError (response As OkHttpResponse, reason As String, statusCode As Int, taskId As Int)
- 	Dim job As XHttpJob = jobs.Get(taskId)
-	For Each callback As Callback In job.GetErrorCallbacks()
-				CallSubDelayed2(callback.GetModule,callback.GetRoutine,job.Response)
-		Next
-	jobs.Remove(taskId)
 End Sub
