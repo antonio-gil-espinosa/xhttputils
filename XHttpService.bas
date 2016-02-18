@@ -49,7 +49,6 @@ Sub xhttpclient_ResponseSuccess (response As OkHttpResponse, taskId As Int)
 		xResponse.ContentType = response.ContentType
 		xResponse.ContentLength = response.ContentLength
 		xResponse.StatusCode = response.StatusCode
-		
 		job.Response = xResponse
 		job.Response.OutputStream.InitializeToBytesArray(0)
 		response.GetAsynchronously("response", xResponse.OutputStream, True, taskId)
@@ -118,6 +117,15 @@ End Sub
 
  Sub xhttpclient_ResponseError (response As OkHttpResponse, reason As String, statusCode As Int, taskId As Int)
  	Dim job As XHttpJob = jobs.Get(taskId)
+	Dim xResponse As XHttpResponse
+	xResponse.Initialize()
+	'xResponse.ContentType = response.ContentType
+	'xResponse.ContentLength = response.ContentLength
+	xResponse.StatusCode = statusCode
+	xResponse.OutputStream.InitializeToBytesArray(0)
+	Dim bytes() As Byte = response.ErrorResponse.GetBytes("UTF-8")
+	xResponse.OutputStream.WriteBytes(bytes,0,bytes.Length)
+	job.Response = xResponse
 	For Each callback As Callback In job.GetErrorCallbacks()
 
 			Try
@@ -126,6 +134,6 @@ End Sub
 				Log(LastException.Message)
 			End Try
 		
-		Next
+	Next
 	jobs.Remove(taskId)
 End Sub
