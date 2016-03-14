@@ -79,12 +79,11 @@ Public Sub Execute(request As XHttpRequest) As XHttpJob
 	End If
 	
 	
-	If request.UserAgent <> Null And request.UserAgent.Length > 0 Then
-		httpRequest.SetHeader("User-Agent",request.UserAgent)
-	else If UserAgent  <> Null And UserAgent.Length > 0 Then
-		httpRequest.SetHeader("User-Agent",UserAgent)
-	End If
+	For i = 0 To request.Headers.Size -1
+		httpRequest.SetHeader(request.Headers.GetKeyAt(i),request.Headers.GetValueAt(i))
+	Next
 	
+
 	Dim job As XHttpJob
 	job.Initialize()
 	job.Request = request

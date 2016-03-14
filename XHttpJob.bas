@@ -31,6 +31,20 @@ Public Sub OnError(module As Object,routine As String) As XHttpJob
 	Return Me
 End Sub
 
+Public Sub OnSuccess2(module As Object,routine As String,arg As Object) As XHttpJob
+	Dim cb As Callback2
+	cb.Initialize(module,routine,arg)
+	SuccessCallbacks.Add(cb)
+	Return Me
+End Sub
+
+Public Sub OnError2(module As Object,routine As String,arg As Object) As XHttpJob
+	Dim cb As Callback2
+	cb.Initialize(module,routine,arg)
+	ErrorCallbacks.Add(cb)
+	Return Me
+End Sub
+
 Public Sub GetSuccessCallbacks() As List
 	Return SuccessCallbacks
 End Sub

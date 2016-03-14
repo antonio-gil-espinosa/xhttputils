@@ -7,12 +7,13 @@ B4A=true
 Sub Class_Globals
 	Public Data As Map
 	Public Parameters As Map
+	Public Headers As Map
 	Public Cookies As Map
 	Public Url As String
 	Public Method As String
-	Public UserAgent As String = Null
 	Public Files As List
 	Private size As Int
+	Public Timeout As Int
 End Sub
 
 
@@ -24,8 +25,9 @@ Public Sub Initialize(pUrl As String,pMethod As String)
 	Data.Initialize()
 	Method = pMethod
 	Url = pUrl
+	Headers.Initialize()
 	Files.Initialize()
-	
+	Timeout = 30000
 End Sub
 
 Public Sub GetXInputStream(boundary As String) As XInputStream
